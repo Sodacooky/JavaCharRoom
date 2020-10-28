@@ -1,4 +1,5 @@
 import java.net.ServerSocket;
+import java.net.Socket;
 
 public class ChatServer {
     public static void main(String[] args) throws Exception {
@@ -7,7 +8,8 @@ public class ChatServer {
 
         // 运行服务器，若有新用户则连接
         while (flag) {
-            ServerThread st = new ServerThread(server.accept());
+            Socket socket=server.accept();
+            ServerThread st = new ServerThread(socket);
             Thread t = new Thread(st);
             t.start();
         }

@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
 
+// 接收信息并打印
 public class PrintMessage extends Thread {
     public void run() {
         Socket client = null;
