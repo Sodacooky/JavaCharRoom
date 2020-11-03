@@ -1,35 +1,52 @@
 package com.Server;
 
-import java.io.IOException;
+import com.Common.Message;
+
+import java.io.*;
 import java.net.Socket;
 
 //一个用户和线程
 public class User {
     //
-    private Socket m_sock;
+    protected Socket sock;
 
     //user nickname
-    public String strNickname;
+    protected String strNickname;
 
+    //for io
+    protected BufferedWriter writer;
+    protected BufferedReader reader;
 
     User(Socket socket) {
-        m_sock = socket;
+        //alloc
+        sock = socket;
+
+        //获取流
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(sock.getOutputStream()));
+            reader = new BufferedReader(new InputStreamReader(sock.getInputStream()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //监听消息线程
         Thread thr = new Thread(new UserThread(this));
         thr.start();
     }
 
-    //返回他的socket
-    Socket getSocket() {
-        return m_sock;
-    }
-
     //向其广播消息
     public void broadcastMessage(Message msg) {
-        ServerTool.sendMessage(m_sock, "[[!BC]]");
-
-        ServerTool.sendMessage(m_sock, msg.strOwner);
-        ServerTool.sendMessage(m_sock, String.valueOf(msg.lTime));
-        ServerTool.sendMessage(m_sock, msg.strContent);
+        try {
+            writer.write("[[!BC]]\n");
+            writer.write(msg.strOwner + "\n");
+            writer.write(String.valueOf(msg.lTime) + "\n");
+            writer.write(msg.strContent + "\n");
+            writer.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            UserList.deleteUser(strNickname);
+            MessageHub.add("**系统**", strNickname + " 离开了");
+        }
 
     }
 
@@ -47,42 +64,31 @@ class UserThread extends Thread {
     //线程主函数
     public void run() {
         String recv;
+        try {
+            while (m_usr.sock.isConnected()) {
+                //等待用户的标志信息
+                recv = m_usr.reader.readLine();
 
-        while (true) {
-            //等待用户的标志信息
-            recv = ServerTool.waitMessage(m_usr.getSocket());
+                //处理
+                if (recv.equals("[[!MSG]]")) {
+                    //用户发来新消息
+                    recv = m_usr.reader.readLine();
+                    //添加信息到MessageHub
+                    MessageHub.add(m_usr.strNickname, recv);
 
-            //处理
-            if (recv.equals("[[!MSG]]")) {
-                //用户发来新消息
-
-                //添加信息到MessageHub
-                recv = ServerTool.waitMessage(m_usr.getSocket());
-                MessageHub.add(m_usr.strNickname, recv);
-
-                //给用户发送回应
-                ServerTool.sendMessage(m_usr.getSocket(), "[[!OK]]");
-
-            } else if (recv.equals("[[!QUIT]]")) {
-                //用户请求登出
-                ServerTool.sendMessage(m_usr.getSocket(), "[[!OK]]");
-                UserList.deleteUser(m_usr.strNickname);
-                MessageHub.add("*系统*", m_usr.strNickname + " 离开了");
-
-                try {
-                    m_usr.getSocket().close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } else if (recv.equals("[[!QUIT]]")) {
+                    //用户请求登出
+                    //发送确认
+                    m_usr.writer.write("[[!OK]]\n");
+                    m_usr.writer.flush();
+                    break;
                 }
-
-                return;
-            } else {
-                //用户发送了错误的标志
-                //什么都不做
-
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            UserList.deleteUser(m_usr.strNickname);
+            MessageHub.add("*系统*", m_usr.strNickname + " 离开了");
         }
-
     }
-
 }

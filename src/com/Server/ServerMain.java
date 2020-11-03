@@ -4,20 +4,24 @@ package com.Server;
 public class ServerMain extends Thread {
 
     //构造就开始运行
-    ServerMain() {
-        (new Thread(this)).start();
+    public ServerMain() {
+        UserList.init();
+        MessageHub.init();
+
+        Thread thr = new Thread(this);
+        thr.start();
+
         handleMessage();
     }
 
     //开始运行服务器
     public void run() {
-        UserList.init();
-        MessageHub.init();
-
         LoginHub login_sys = new LoginHub();
         while (true) {
             User usr_new = login_sys.waitForLogin();
-            UserList.addUser(usr_new);
+            if (usr_new != null) {
+                UserList.addUser(usr_new);
+            }
         }
     }
 

@@ -1,5 +1,7 @@
 package com.Server;
 
+import com.Common.Message;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
@@ -26,22 +28,26 @@ public class MessageHub {
     //加一个
     public static void add(String nickname, String content) {
         if (!sm_hasInit) {
-            System.out.println("[Error]\tMessageHub isn't initialized.");
+            System.out.println("[Error] MessageHub 未初始化");
             return;
         }
+
+        sm_lock.lock();
 
         Message message = new Message();
         message.strOwner = nickname;
         message.strContent = content;
         message.setTimeNow();
         sm_arrayMessage.add(message);
+
         sm_cond.signal();
+        sm_lock.unlock();
     }
 
     //等待新消息，阻塞直到新消息
     public static void waitNewMessage() {
         if (!sm_hasInit) {
-            System.out.println("[Error]\tMessageHub isn't initialized.");
+            System.out.println("[Error] MessageHub 未初始化");
             return;
         }
 
@@ -64,7 +70,7 @@ public class MessageHub {
     //如果没有新消息就试图取出，返回null
     public static Message getMessage() {
         if (!sm_hasInit) {
-            System.out.println("[Error]\tMessageHub isn't initialized.");
+            System.out.println("[Error] 未初始化");
             return null;
         }
 

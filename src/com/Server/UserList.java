@@ -1,5 +1,8 @@
 package com.Server;
 
+import com.Common.Message;
+import com.Common.Tool;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,6 +68,12 @@ public class UserList {
 
     //向所有用户广播
     public static void broadcastMessage(Message msg) {
+        if (msg == null) {
+            return;
+        }
+
+        System.out.println("[Chat] " + msg.strOwner + " : " + Tool.recoverBreakRow(msg.strContent));
+
         for (User usr : sm_listUser) {
             usr.broadcastMessage(msg);
         }
