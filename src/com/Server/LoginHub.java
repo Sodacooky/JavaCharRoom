@@ -14,7 +14,7 @@ public class LoginHub {
     private BufferedReader m_readerHandling;
     private BufferedWriter m_writerHandling;
 
-    //bind 50000 port
+    //bind port
     LoginHub() {
         try {
             //交互输入监听端口
@@ -68,6 +68,7 @@ public class LoginHub {
             usr_new.strNickname = nickname;
 
             System.out.println("[INFO] " + usr_new.strNickname + " 登入成功");
+            MessageHub.add("**系统**", nickname + " 进入了聊天室。");
 
             return usr_new;
 

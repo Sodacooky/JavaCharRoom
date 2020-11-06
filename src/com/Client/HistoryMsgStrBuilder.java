@@ -15,8 +15,8 @@ public class HistoryMsgStrBuilder {
 
     //加入一条消息，刷新内部储存的字符串
     public void appendMessage(Message msg) {
-        m_strBuilder.append(msg.strOwner + " " + __transTime(msg.lTime) + ":\n");
-        m_strBuilder.append(msg.strContent + "\n\t--------\n");
+        m_strBuilder.append(msg.strOwner + " @ " + __transTime(msg.lTime) + ":\n");
+        m_strBuilder.append(msg.strContent + "\n\n");
         __cleanup();
     }
 

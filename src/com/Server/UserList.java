@@ -72,7 +72,7 @@ public class UserList {
             return;
         }
 
-        System.out.println("[Chat] " + msg.strOwner + " : " + Tool.recoverBreakRow(msg.strContent));
+        System.out.println("[CHAT] " + msg.strOwner + " : " + Tool.recoverBreakRow(msg.strContent));
 
         for (User usr : sm_listUser) {
             usr.broadcastMessage(msg);

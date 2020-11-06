@@ -17,7 +17,6 @@ public class ChatWindow {
 
         m_history = new HistoryMsgStrBuilder();
         __buildWindow();
-        (new MsgWaitThread(m_history, clientCore, this)).start();
     }
 
     private void __buildWindow() {
@@ -28,22 +27,24 @@ public class ChatWindow {
         m_fWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         m_taHistory = new JTextArea(m_history.getString());
-        m_taHistory.setBounds(0, 0, 640, 480 - 32);
         m_taHistory.setEditable(false);
         m_taHistory.setLineWrap(true);
         m_taHistory.setWrapStyleWord(true);
-        JScrollPane scroll_pane = new JScrollPane();
-        scroll_pane.add(m_taHistory);
-        scroll_pane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scroll_pane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        m_fWindow.add(scroll_pane);
+        m_jspHistory = new JScrollPane(m_taHistory);
+        m_jspHistory.setSize(640 - 16, 400);
+        m_jspHistory.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        m_fWindow.add(m_jspHistory);
 
         m_taInput = new JTextArea();
-        m_taInput.setBounds(0, 480 - 30, 600, 30);
-        m_fWindow.add(m_taInput);
+        m_taHistory.setLineWrap(true);
+        m_taHistory.setWrapStyleWord(true);
+        JScrollPane jsp_input = new JScrollPane(m_taInput);
+        jsp_input.setBounds(0, 408, 550, 32);
+        jsp_input.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        m_fWindow.add(jsp_input);
 
         m_btnSend = new JButton("发送");
-        m_btnSend.setBounds(608, 480 - 30, 32, 30);
+        m_btnSend.setBounds(558, 408, 64, 32);
         m_btnSend.setToolTipText("快捷键：Ctrl+Enter");
         m_btnSend.registerKeyboardAction(new SendBtnActionListener(this),
             KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, KeyEvent.CTRL_DOWN_MASK),
@@ -59,6 +60,7 @@ public class ChatWindow {
     //为空也返回false
     public boolean sendMessage() {
         String msg = m_taInput.getText();
+        m_taInput.setText("");
 
         //一条有"[[!"的消息不是一条好消息
         if (msg.contains("[[!")) {
@@ -82,9 +84,20 @@ public class ChatWindow {
         return true;
     }
 
-    //更新历史信息文本框
-    public void updateHistory() {
+    //给予信息更新窗口
+    public void pushInMessage(Message msg) {
+        m_history.appendMessage(msg);
         m_taHistory.setText(m_history.getString());
+        JScrollBar jsb = m_jspHistory.getVerticalScrollBar();
+        for (int i = 0; i != 2; i++) {
+            try {
+                Thread.sleep(100);
+                jsb.setValue(jsb.getMaximum());
+                m_jspHistory.repaint();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
@@ -94,6 +107,7 @@ public class ChatWindow {
     private JButton m_btnSend;
     private JTextArea m_taHistory;
     private JTextArea m_taInput;
+    private JScrollPane m_jspHistory;
 
     private HistoryMsgStrBuilder m_history;
 }
@@ -106,38 +120,8 @@ class SendBtnActionListener implements ActionListener {
 
     @Override public void actionPerformed(ActionEvent e) {
         m_chatWindow.sendMessage();
+
     }
 
     private ChatWindow m_chatWindow;
-}
-
-
-class MsgWaitThread extends Thread {
-    public MsgWaitThread(HistoryMsgStrBuilder hmsb, ClientCore cc, ChatWindow cw) {
-        m_hmsb = hmsb;
-        m_cc = cc;
-        m_cw = cw;
-    }
-
-    public void run() {
-        try {
-            while (true) {
-                Message msg = m_cc.waitForMessage();
-                if (msg == null) {
-                    continue;
-                }
-
-                m_hmsb.appendMessage(msg);
-                m_cw.updateHistory();
-            }
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
-            System.exit(-1);
-        }
-
-    }
-
-    private HistoryMsgStrBuilder m_hmsb;
-    private ClientCore m_cc;
-    private ChatWindow m_cw;
 }
