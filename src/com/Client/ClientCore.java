@@ -24,23 +24,29 @@ public class ClientCore {
 
     //登录
     //返回: true登录成功，否则失败
-    public boolean tryLogin(String usrname) throws IOException {
-        m_socket = new Socket(m_strAddr, m_nPort);
-        m_reader = new BufferedReader(new InputStreamReader(m_socket.getInputStream()));
-        m_writer = new BufferedWriter(new OutputStreamWriter(m_socket.getOutputStream()));
+    public boolean tryLogin(String usrname) {
+        try {
+            m_socket = new Socket(m_strAddr, m_nPort);
+            m_reader = new BufferedReader(new InputStreamReader(m_socket.getInputStream()));
+            m_writer = new BufferedWriter(new OutputStreamWriter(m_socket.getOutputStream()));
 
-        m_reader.readLine();//OK
+            m_reader.readLine();//OK
 
-        m_writer.write("[[!LOGIN]]\n");
-        m_writer.flush();
-        m_reader.readLine();//OK//必定
+            m_writer.write("[[!LOGIN]]\n");
+            m_writer.flush();
+            m_reader.readLine();//OK//必定
 
-        m_writer.write(usrname + "\n");
-        m_writer.flush();
-        if (m_reader.readLine().equals("[[!OK]]")) {
-            return true;
-        } else {
-            m_socket.close();
+            m_writer.write(usrname + "\n");
+            m_writer.flush();
+            if (m_reader.readLine().equals("[[!OK]]")) {
+                m_usrname = usrname;
+                return true;
+            } else {
+                m_socket.close();
+                return false;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
             return false;
         }
     }
